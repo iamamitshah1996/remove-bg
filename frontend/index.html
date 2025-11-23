@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RemoveImageBG - Background Remover</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-white text-gray-800">
+
+  <!-- Header -->
+  <header class="border-b p-4 flex items-center">
+    <div class="flex items-center space-x-2">
+      <div class="bg-purple-600 p-2 rounded-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 7h18M3 12h18M3 17h18" />
+        </svg>
+      </div>
+      <span class="font-semibold text-lg">RemoveImageBG</span>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-4xl mx-auto px-4 py-16 text-center">
+
+    <h1 class="text-4xl font-bold mb-2">Remove Image Backgrounds Instantly</h1>
+    <p class="text-gray-500 mb-10">
+      Upload your photo and get a transparent PNG in seconds. Powered by AI.
+    </p>
+
+    <!-- Upload Box -->
+    <div id="drop-box"
+      class="border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center space-y-4">
+
+      <div class="bg-gray-200 p-4 rounded-full">
+        ⬆️
+      </div>
+
+      <p class="font-semibold">Drop your image here</p>
+      <p class="text-gray-500 text-sm">or click to browse</p>
+
+      <input type="file" id="file-input" hidden />
+
+      <button onclick="triggerUpload()"
+        class="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700">
+        Browse Files
+      </button>
+
+      <p class="text-xs text-gray-400">
+        Supports: JPG, PNG, WEBP • Max size: 10MB
+      </p>
+    </div>
+
+
+    <!-- Preview -->
+    <div id="result" class="mt-12 hidden grid grid-cols-2 gap-6">
+      <div>
+        <h3 class="font-bold mb-2">Original</h3>
+        <img id="original-image" class="border rounded-md" />
+      </div>
+
+      <div>
+        <h3 class="font-bold mb-2">Background Removed</h3>
+        <img id="processed-image" class="border rounded-md bg-checker" />
+        <br />
+        <a id="download-btn" download="removed.png"
+          class="inline-block mt-4 bg-green-600 text-white px-4 py-2 rounded">
+          Download
+        </a>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="grid md:grid-cols-3 gap-6 mt-16 text-left">
+
+      <div class="border p-5 rounded-xl text-center">
+        <div class="bg-purple-100 text-purple-700 p-3 rounded-lg inline-block mb-2">🖼️</div>
+        <h4 class="font-semibold mb-1">High Quality</h4>
+        <p class="text-sm text-gray-500">AI-powered background removal preserves details</p>
+      </div>
+
+      <div class="border p-5 rounded-xl text-center">
+        <div class="bg-purple-100 text-purple-700 p-3 rounded-lg inline-block mb-2">⚡</div>
+        <h4 class="font-semibold mb-1">Fast Processing</h4>
+        <p class="text-sm text-gray-500">Get results in seconds</p>
+      </div>
+
+      <div class="border p-5 rounded-xl text-center">
+        <div class="bg-purple-100 text-purple-700 p-3 rounded-lg inline-block mb-2">⬇️</div>
+        <h4 class="font-semibold mb-1">Free Download</h4>
+        <p class="text-sm text-gray-500">Download transparent images for free</p>
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- Footer -->
+  <footer class="border-t py-6 text-center text-sm text-gray-400">
+    © 2024 RemoveImageBG. All rights reserved.
+  </footer>
+
+
+  <!-- Script -->
+  <script>
+    const fileInput = document.getElementById("file-input");
+    const dropBox = document.getElementById("drop-box");
+
+    dropBox.addEventListener("click", () => fileInput.click());
+
+    function triggerUpload() {
+      fileInput.click();
+    }
+
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      document.getElementById("result").classList.remove("hidden");
+      document.getElementById("original-image").src = URL.createObjectURL(file);
+
+      const formData = new FormData();
+      formData.append("image", file);
+
+      // SEND TO BACKEND
+      const res = await fetch("http://localhost:5000/remove-bg", {
+        method: "POST",
+        body: formData
+      });
+
+      const blob = await res.blob();
+      const imgUrl = URL.createObjectURL(blob);
+
+      document.getElementById("processed-image").src = imgUrl;
+      document.getElementById("download-btn").href = imgUrl;
+    });
+  </script>
+
+  <!-- Transparent grid background -->
+  <style>
+    .bg-checker {
+      background-image: linear-gradient(45deg, #eee 25%, transparent 25%),
+        linear-gradient(-45deg, #eee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eee 75%),
+        linear-gradient(-45deg, transparent 75%, #eee 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+  </style>
+
+</body>
+</html>
