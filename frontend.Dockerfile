@@ -1,10 +1,11 @@
-FROM nginx:alpine
+FROM python:3.10-slim
 
-# Remove default config
-RUN rm /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-COPY frontend/index.html /usr/share/nginx/html/index.html
+# Copy static frontend
+COPY frontend/index.html .
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["python", "-m", "http.server", "80"]
+

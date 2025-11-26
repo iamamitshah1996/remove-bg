@@ -4,155 +4,229 @@
   <meta charset="UTF-8" />
   <title>RemoveImageBG - Background Remover</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body class="bg-white text-gray-800">
-
-  <!-- Header -->
-  <header class="border-b p-4 flex items-center">
-    <div class="flex items-center space-x-2">
-      <div class="bg-purple-600 p-2 rounded-md">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none"
-          viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M3 7h18M3 12h18M3 17h18" />
-        </svg>
-      </div>
-      <span class="font-semibold text-lg">RemoveImageBG</span>
-    </div>
-  </header>
-
-  <!-- Main -->
-  <main class="max-w-4xl mx-auto px-4 py-16 text-center">
-
-    <h1 class="text-4xl font-bold mb-2">Remove Image Backgrounds Instantly</h1>
-    <p class="text-gray-500 mb-10">
-      Upload your photo and get a transparent PNG in seconds. Powered by AI.
-    </p>
-
-    <!-- Upload Box -->
-    <div id="drop-box"
-      class="border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center space-y-4">
-
-      <div class="bg-gray-200 p-4 rounded-full">
-        ⬆️
-      </div>
-
-      <p class="font-semibold">Drop your image here</p>
-      <p class="text-gray-500 text-sm">or click to browse</p>
-
-      <input type="file" id="file-input" hidden />
-
-      <button onclick="triggerUpload()"
-        class="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700">
-        Browse Files
-      </button>
-
-      <p class="text-xs text-gray-400">
-        Supports: JPG, PNG, WEBP • Max size: 10MB
-      </p>
-    </div>
-
-
-    <!-- Preview -->
-    <div id="result" class="mt-12 hidden grid grid-cols-2 gap-6">
-      <div>
-        <h3 class="font-bold mb-2">Original</h3>
-        <img id="original-image" class="border rounded-md" />
-      </div>
-
-      <div>
-        <h3 class="font-bold mb-2">Background Removed</h3>
-        <img id="processed-image" class="border rounded-md bg-checker" />
-        <br />
-        <a id="download-btn" download="removed.png"
-          class="inline-block mt-4 bg-green-600 text-white px-4 py-2 rounded">
-          Download
-        </a>
-      </div>
-    </div>
-
-    <!-- Features -->
-    <div class="grid md:grid-cols-3 gap-6 mt-16 text-left">
-
-      <div class="border p-5 rounded-xl text-center">
-        <div class="bg-purple-100 text-purple-700 p-3 rounded-lg inline-block mb-2">🖼️</div>
-        <h4 class="font-semibold mb-1">High Quality</h4>
-        <p class="text-sm text-gray-500">AI-powered background removal preserves details</p>
-      </div>
-
-      <div class="border p-5 rounded-xl text-center">
-        <div class="bg-purple-100 text-purple-700 p-3 rounded-lg inline-block mb-2">⚡</div>
-        <h4 class="font-semibold mb-1">Fast Processing</h4>
-        <p class="text-sm text-gray-500">Get results in seconds</p>
-      </div>
-
-      <div class="border p-5 rounded-xl text-center">
-        <div class="bg-purple-100 text-purple-700 p-3 rounded-lg inline-block mb-2">⬇️</div>
-        <h4 class="font-semibold mb-1">Free Download</h4>
-        <p class="text-sm text-gray-500">Download transparent images for free</p>
-      </div>
-
-    </div>
-
-  </main>
-
-
-  <!-- Footer -->
-  <footer class="border-t py-6 text-center text-sm text-gray-400">
-    © 2024 RemoveImageBG. All rights reserved.
-  </footer>
-
-
-  <!-- Script -->
-  <script>
-    const fileInput = document.getElementById("file-input");
-    const dropBox = document.getElementById("drop-box");
-
-    dropBox.addEventListener("click", () => fileInput.click());
-
-    function triggerUpload() {
-      fileInput.click();
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f9fafb;
+      margin: 0;
     }
 
-    fileInput.addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+    header {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 24px;
+      font-weight: 600;
+      background: #ffffff;
+    }
 
-      document.getElementById("result").classList.remove("hidden");
-      document.getElementById("original-image").src = URL.createObjectURL(file);
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 16px 48px;
+    }
 
-      const formData = new FormData();
-      formData.append("image", file);
+    h1 {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
 
-      // SEND TO BACKEND
-      const res = await fetch("http://localhost:5000/remove-bg", {
-        method: "POST",
-        body: formData
-      });
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 24px;
+    }
 
-      const blob = await res.blob();
-      const imgUrl = URL.createObjectURL(blob);
+    .upload-box {
+      border: 2px dashed #d1d5db;
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      background: #ffffff;
+    }
 
-      document.getElementById("processed-image").src = imgUrl;
-      document.getElementById("download-btn").href = imgUrl;
-    });
-  </script>
+    .btn-primary {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #7c3aed;
+      color: #ffffff;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
 
-  <!-- Transparent grid background -->
-  <style>
+    .btn-primary:hover {
+      background-color: #6d28d9;
+    }
+
+    .small-text {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 32px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .card img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
     .bg-checker {
-      background-image: linear-gradient(45deg, #eee 25%, transparent 25%),
+      background-image:
+        linear-gradient(45deg, #eee 25%, transparent 25%),
         linear-gradient(-45deg, #eee 25%, transparent 25%),
         linear-gradient(45deg, transparent 75%, #eee 75%),
         linear-gradient(-45deg, transparent 75%, #eee 75%);
       background-size: 20px 20px;
       background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     }
+
+    .btn-download {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 16px;
+      background-color: #16a34a;
+      color: #ffffff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .status {
+      margin-top: 16px;
+      font-weight: 600;
+      color: #7c3aed;
+      display: none;
+    }
+
+    .error {
+      margin-top: 16px;
+      color: #dc2626;
+      font-weight: 500;
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
+</head>
+<body>
+
+<header>
+  RemoveImageBG
+</header>
+
+<main>
+  <h1>Remove Image Backgrounds Instantly</h1>
+  <p class="subtitle">Upload your photo and get a transparent PNG in seconds.</p>
+
+  <div class="upload-box">
+    <input type="file" id="file-input" accept="image/*" style="display:none" />
+    <button class="btn-primary" id="choose-btn">Choose Image</button>
+    <p class="small-text">Supports JPG, PNG, WEBP — Max 10MB</p>
+  </div>
+
+  <div id="status" class="status">Processing image… please wait</div>
+  <div id="error" class="error"></div>
+
+  <div id="result" style="display:none;">
+    <div class="grid">
+      <div class="card">
+        <h3>Original</h3>
+        <img id="original-img" alt="Original">
+      </div>
+      <div class="card">
+        <h3>Background Removed</h3>
+        <img id="processed-img" class="bg-checker" alt="Processed">
+        <a id="download-link" class="btn-download" download="removed.png">Download</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Backend URL: same host, port 5000
+  const BACKEND_URL =
+    window.location.protocol + "//" + window.location.hostname + ":5000/remove-bg";
+
+  const fileInput = document.getElementById("file-input");
+  const chooseBtn = document.getElementById("choose-btn");
+  const statusEl = document.getElementById("status");
+  const errorEl = document.getElementById("error");
+  const resultEl = document.getElementById("result");
+  const originalImg = document.getElementById("original-img");
+  const processedImg = document.getElementById("processed-img");
+  const downloadLink = document.getElementById("download-link");
+
+  chooseBtn.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Reset UI
+    errorEl.style.display = "none";
+    statusEl.style.display = "block";
+    statusEl.textContent = "Processing image… please wait";
+    resultEl.style.display = "none";
+
+    // Preview original
+    originalImg.src = URL.createObjectURL(file);
+
+    // Build form data
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await fetch(BACKEND_URL, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!res.ok) {
+        errorEl.textContent = "Backend error: " + res.status + " " + res.statusText;
+        errorEl.style.display = "block";
+        statusEl.style.display = "none";
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      processedImg.src = url;
+      downloadLink.href = url;
+
+      resultEl.style.display = "block";
+      statusEl.style.display = "none";
+
+    } catch (err) {
+      console.error(err);
+      errorEl.textContent = "Failed to connect to backend";
+      errorEl.style.display = "block";
+      statusEl.style.display = "none";
+    }
+  });
+</script>
 
 </body>
 </html>
+
