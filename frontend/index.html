@@ -4,229 +4,513 @@
   <meta charset="UTF-8" />
   <title>RemoveImageBG - Background Remover</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f9fafb;
-      margin: 0;
-    }
-
-    header {
-      border-bottom: 1px solid #e5e7eb;
-      padding: 12px 24px;
-      font-weight: 600;
-      background: #ffffff;
-    }
-
-    main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 32px 16px 48px;
-    }
-
-    h1 {
-      font-size: 32px;
-      margin-bottom: 8px;
-    }
-
-    .subtitle {
-      color: #6b7280;
-      margin-bottom: 24px;
-    }
-
-    .upload-box {
-      border: 2px dashed #d1d5db;
-      border-radius: 16px;
-      padding: 32px;
-      text-align: center;
-      background: #ffffff;
-    }
-
-    .btn-primary {
-      display: inline-block;
-      padding: 10px 20px;
-      background-color: #7c3aed;
-      color: #ffffff;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .btn-primary:hover {
-      background-color: #6d28d9;
-    }
-
-    .small-text {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 8px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-top: 32px;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
-
-    .card h3 {
-      margin-top: 0;
-      margin-bottom: 8px;
-      font-size: 16px;
-    }
-
-    .card img {
-      max-width: 100%;
-      border-radius: 8px;
-    }
-
-    .bg-checker {
+    /* checkerboard pattern for transparency preview */
+    .checker {
       background-image:
-        linear-gradient(45deg, #eee 25%, transparent 25%),
-        linear-gradient(-45deg, #eee 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #eee 75%),
-        linear-gradient(-45deg, transparent 75%, #eee 75%);
+        linear-gradient(45deg, #e5e5e5 25%, transparent 25%),
+        linear-gradient(-45deg, #e5e5e5 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e5e5e5 75%),
+        linear-gradient(-45deg, transparent 75%, #e5e5e5 75%);
       background-size: 20px 20px;
       background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
     }
 
-    .btn-download {
-      display: inline-block;
-      margin-top: 12px;
-      padding: 8px 16px;
-      background-color: #16a34a;
-      color: #ffffff;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 14px;
+    .color-swatch {
+      width: 48px;
+      height: 48px;
+      border-radius: 9999px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
     }
 
-    .status {
-      margin-top: 16px;
-      font-weight: 600;
-      color: #7c3aed;
-      display: none;
-    }
-
-    .error {
-      margin-top: 16px;
-      color: #dc2626;
-      font-weight: 500;
-      display: none;
-    }
-
-    @media (max-width: 768px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
+    .color-swatch.selected {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79,70,229,0.3);
     }
   </style>
 </head>
-<body>
 
-<header>
-  RemoveImageBG
-</header>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
 
-<main>
-  <h1>Remove Image Backgrounds Instantly</h1>
-  <p class="subtitle">Upload your photo and get a transparent PNG in seconds.</p>
-
-  <div class="upload-box">
-    <input type="file" id="file-input" accept="image/*" style="display:none" />
-    <button class="btn-primary" id="choose-btn">Choose Image</button>
-    <p class="small-text">Supports JPG, PNG, WEBP — Max 10MB</p>
-  </div>
-
-  <div id="status" class="status">Processing image… please wait</div>
-  <div id="error" class="error"></div>
-
-  <div id="result" style="display:none;">
-    <div class="grid">
-      <div class="card">
-        <h3>Original</h3>
-        <img id="original-img" alt="Original">
-      </div>
-      <div class="card">
-        <h3>Background Removed</h3>
-        <img id="processed-img" class="bg-checker" alt="Processed">
-        <a id="download-link" class="btn-download" download="removed.png">Download</a>
+  <!-- Top bar -->
+  <header class="border-b bg-white">
+    <div class="max-w-6xl mx-auto flex items-center justify-between py-3 px-4">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">
+          bg
+        </div>
+        <span class="font-semibold text-lg">RemoveImageBG</span>
       </div>
     </div>
-  </div>
-</main>
+  </header>
 
-<script>
-  // Backend URL: same host, port 5000
-  const BACKEND_URL =
-    window.location.protocol + "//" + window.location.hostname + ":5000/remove-bg";
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto px-4 py-10 space-y-10">
 
-  const fileInput = document.getElementById("file-input");
-  const chooseBtn = document.getElementById("choose-btn");
-  const statusEl = document.getElementById("status");
-  const errorEl = document.getElementById("error");
-  const resultEl = document.getElementById("result");
-  const originalImg = document.getElementById("original-img");
-  const processedImg = document.getElementById("processed-img");
-  const downloadLink = document.getElementById("download-link");
+    <!-- Hero / uploader -->
+    <section class="space-y-4 text-center">
+      <h1 class="text-3xl md:text-4xl font-bold">
+        Remove Image Backgrounds Instantly
+      </h1>
+      <p class="text-slate-500">
+        Upload your photo and get a transparent PNG in seconds. Then add solid colors behind it.
+      </p>
 
-  chooseBtn.addEventListener("click", () => fileInput.click());
+      <div id="drop-area"
+           class="mt-6 border-2 border-dashed rounded-2xl bg-white shadow-sm max-w-3xl mx-auto
+                  p-10 flex flex-col items-center justify-center space-y-4 cursor-pointer">
+        <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-2xl">
+          ⬆️
+        </div>
+        <div class="space-y-1">
+          <p class="font-medium text-slate-800">Drop your image here</p>
+          <p class="text-sm text-slate-500">or click the button below</p>
+        </div>
 
-  fileInput.addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+        <input type="file" id="file-input" accept="image/*" class="hidden" />
+        <button id="choose-btn"
+                class="mt-2 inline-flex items-center px-6 py-2.5 rounded-full
+                       bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+          Choose Image
+        </button>
 
-    // Reset UI
-    errorEl.style.display = "none";
-    statusEl.style.display = "block";
-    statusEl.textContent = "Processing image… please wait";
-    resultEl.style.display = "none";
+        <p class="text-xs text-slate-400 mt-2">
+          Supports JPG, PNG, WEBP — Max 10MB
+        </p>
 
-    // Preview original
-    originalImg.src = URL.createObjectURL(file);
+        <!-- status text -->
+        <p id="status-text" class="text-xs mt-2 hidden"></p>
 
-    // Build form data
-    const formData = new FormData();
-    formData.append("image", file);
+        <!-- progress bar -->
+        <div id="progress-wrapper"
+             class="hidden w-full max-w-xs mx-auto mt-3 text-left">
+          <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+            <div id="progress-bar" class="h-2 bg-indigo-600 w-0"></div>
+          </div>
+          <p id="progress-label" class="text-xs text-slate-500 mt-1">Uploading…</p>
+        </div>
+      </div>
+    </section>
 
-    try {
-      const res = await fetch(BACKEND_URL, {
-        method: "POST",
-        body: formData
+    <!-- Preview + tools -->
+    <section id="result-section" class="grid md:grid-cols-[2fr,1.2fr] gap-8 items-start hidden">
+
+      <!-- Left: original + processed -->
+      <div class="space-y-4">
+        <div class="grid md:grid-cols-2 gap-4">
+          <!-- Original -->
+          <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div class="border-b px-4 py-2 text-sm font-medium text-slate-700">
+              Original
+            </div>
+            <div class="checker flex items-center justify-center min-h-[260px]">
+              <img id="original-img" class="max-w-full max-h-[360px] object-contain" />
+            </div>
+          </div>
+
+          <!-- Cutout + BG -->
+          <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div class="border-b px-4 py-2 text-sm font-medium text-slate-700 flex items-center justify-between">
+              <span>Background Removed</span>
+              <span id="bg-label" class="text-xs text-slate-400">(transparent)</span>
+            </div>
+            <div id="preview-wrapper"
+                 class="checker flex items-center justify-center min-h-[260px]">
+              <canvas id="preview-canvas"
+                      class="max-w-full max-h-[360px]"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Download buttons -->
+        <div class="flex flex-wrap items-center gap-3">
+          <button id="download-transparent"
+                  class="inline-flex items-center px-4 py-2 text-sm rounded-full bg-slate-900 text-white disabled:opacity-40">
+            Download Transparent PNG
+          </button>
+          <button id="download-colored"
+                  class="inline-flex items-center px-4 py-2 text-sm rounded-full bg-indigo-600 text-white disabled:opacity-40">
+            Download With Background
+          </button>
+          <span class="text-xs text-slate-400">
+            Tip: choose a color on the right, then “Download With Background”.
+          </span>
+        </div>
+      </div>
+
+      <!-- Right: background color picker -->
+      <aside class="bg-white rounded-2xl shadow-sm p-4 space-y-4">
+        <h2 class="font-semibold text-slate-800 flex items-center justify-between">
+          Background
+          <span id="current-color-label" class="text-xs text-slate-400">Transparent</span>
+        </h2>
+
+        <!-- Mode pills -->
+        <div class="inline-flex rounded-full bg-slate-100 p-1 text-xs font-medium">
+          <button id="mode-transparent"
+                  class="px-3 py-1 rounded-full bg-white shadow-sm text-slate-800">
+            Transparent
+          </button>
+          <button disabled
+                  class="px-3 py-1 rounded-full text-slate-400 cursor-not-allowed">
+            Photo
+          </button>
+          <button id="mode-color"
+                  class="px-3 py-1 rounded-full text-slate-600">
+            Color
+          </button>
+        </div>
+
+        <!-- Swatches -->
+        <div class="grid grid-cols-4 gap-3 mt-2">
+          <button class="color-swatch bg-white border border-slate-200"
+                  data-color="transparent" title="Transparent">
+          </button>
+          <button class="color-swatch" style="background:#ffffff"
+                  data-color="#ffffff" title="White">
+          </button>
+          <button class="color-swatch" style="background:#f97316"
+                  data-color="#f97316" title="Orange">
+          </button>
+          <button class="color-swatch" style="background:#ef4444"
+                  data-color="#ef4444" title="Red">
+          </button>
+          <button class="color-swatch" style="background:#ec4899"
+                  data-color="#ec4899" title="Pink">
+          </button>
+          <button class="color-swatch" style="background:#a855f7"
+                  data-color="#a855f7" title="Purple">
+          </button>
+          <button class="color-swatch" style="background:#3b82f6"
+                  data-color="#3b82f6" title="Blue">
+          </button>
+          <button class="color-swatch" style="background:#22c55e"
+                  data-color="#22c55e" title="Green">
+          </button>
+        </div>
+
+        <!-- Custom color -->
+        <div class="mt-4 flex items-center justify-between">
+          <label class="text-xs font-medium text-slate-600 flex items-center space-x-2">
+            <span>Custom color</span>
+            <input id="custom-color" type="color" value="#ffffff"
+                   class="w-7 h-7 rounded-full border border-slate-200 p-0 cursor-pointer" />
+          </label>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    // ==================== CONFIG ====================
+    const BACKEND_URL =
+      window.location.hostname === "localhost"
+        ? "http://localhost:5000/remove-bg"
+        : "http://" + window.location.hostname + ":5000/remove-bg";
+
+    // ==================== DOM REFS ====================
+    const fileInput          = document.getElementById("file-input");
+    const chooseBtn          = document.getElementById("choose-btn");
+    const dropArea           = document.getElementById("drop-area");
+    const statusText         = document.getElementById("status-text");
+    const progressWrapper    = document.getElementById("progress-wrapper");
+    const progressBar        = document.getElementById("progress-bar");
+    const progressLabel      = document.getElementById("progress-label");
+
+    const resultSection      = document.getElementById("result-section");
+    const originalImg        = document.getElementById("original-img");
+    const canvas             = document.getElementById("preview-canvas");
+    const ctx                = canvas.getContext("2d");
+    const previewWrapper     = document.getElementById("preview-wrapper");
+    const bgLabel            = document.getElementById("bg-label");
+
+    const dlTransparentBtn   = document.getElementById("download-transparent");
+    const dlColoredBtn       = document.getElementById("download-colored");
+
+    const modeTransparentBtn = document.getElementById("mode-transparent");
+    const modeColorBtn       = document.getElementById("mode-color");
+    const currentColorLabel  = document.getElementById("current-color-label");
+    const colorSwatches      = Array.from(document.querySelectorAll(".color-swatch"));
+    const customColorInput   = document.getElementById("custom-color");
+
+    // ==================== STATE ====================
+    let processedBlobUrl = null;
+    let coloredDownloadUrl = null;
+    let imgObj = new Image();
+    let selectedColor = "transparent";
+
+    // ==================== HELPERS ====================
+    function setStatus(msg, isError = false) {
+      if (!msg) {
+        statusText.classList.add("hidden");
+        statusText.textContent = "";
+      } else {
+        statusText.classList.remove("hidden");
+        statusText.textContent = msg;
+        statusText.className =
+          "text-xs mt-2 " + (isError ? "text-rose-500" : "text-emerald-600");
+      }
+    }
+
+    function showProgress() {
+      progressWrapper.classList.remove("hidden");
+      setProgress(0, "Uploading…");
+    }
+
+    function hideProgress() {
+      progressWrapper.classList.add("hidden");
+      progressBar.style.width = "0%";
+      progressLabel.textContent = "";
+    }
+
+    function setProgress(percent, label) {
+      progressBar.style.width = Math.min(Math.max(percent, 0), 100) + "%";
+      if (label) progressLabel.textContent = label;
+    }
+
+    function setButtonsEnabled(enabled) {
+      dlTransparentBtn.disabled = !enabled;
+      dlColoredBtn.disabled = !enabled;
+    }
+
+    function updateBgLabels() {
+      if (selectedColor === "transparent") {
+        bgLabel.textContent = "(transparent)";
+        currentColorLabel.textContent = "Transparent";
+      } else {
+        bgLabel.textContent = "";
+        currentColorLabel.textContent = selectedColor.toUpperCase();
+      }
+    }
+
+    // ==================== CANVAS DRAWING ====================
+    function drawPreview() {
+      if (!imgObj.src) return;
+
+      // scale to fit
+      const maxWidth  = 600;
+      const maxHeight = 400;
+      const scale = Math.min(
+        maxWidth / imgObj.naturalWidth,
+        maxHeight / imgObj.naturalHeight,
+        1
+      );
+
+      const w = imgObj.naturalWidth * scale;
+      const h = imgObj.naturalHeight * scale;
+
+      canvas.width = w;
+      canvas.height = h;
+
+      // For preview: color fills entire card via wrapper background.
+      // For download: we still paint color inside canvas as well.
+      if (selectedColor === "transparent") {
+        previewWrapper.classList.add("checker");
+        previewWrapper.style.backgroundColor = "transparent";
+        ctx.clearRect(0, 0, w, h);
+      } else {
+        previewWrapper.classList.remove("checker");
+        previewWrapper.style.backgroundColor = selectedColor;
+        ctx.fillStyle = selectedColor;
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(imgObj, 0, 0, w, h);
+
+      // Create colored download blob
+      if (coloredDownloadUrl) {
+        URL.revokeObjectURL(coloredDownloadUrl);
+        coloredDownloadUrl = null;
+      }
+      canvas.toBlob((blob) => {
+        if (blob) {
+          coloredDownloadUrl = URL.createObjectURL(blob);
+        }
+      }, "image/png");
+    }
+
+    // ==================== UPLOAD WITH PROGRESS ====================
+    function sendWithProgress(formData) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", BACKEND_URL, true);
+        xhr.responseType = "blob";
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 70); // 0–70% for upload
+            setProgress(pct, "Uploading…");
+          }
+        };
+
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              setProgress(100, "Done");
+              resolve(xhr.response);
+            } else {
+              reject(new Error("Backend error: " + xhr.statusText));
+            }
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network error"));
+
+        setProgress(5, "Uploading…");
+        xhr.send(formData);
+
+        // After upload finished but before response, show "Processing…"
+        xhr.upload.onload = () => {
+          setProgress(80, "Processing on server…");
+        };
       });
+    }
 
-      if (!res.ok) {
-        errorEl.textContent = "Backend error: " + res.status + " " + res.statusText;
-        errorEl.style.display = "block";
-        statusEl.style.display = "none";
+    // ==================== MAIN FILE HANDLER ====================
+    async function handleFile(file) {
+      if (!file) return;
+      if (file.size > 10 * 1024 * 1024) {
+        setStatus("File is larger than 10MB.", true);
         return;
       }
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      processedImg.src = url;
-      downloadLink.href = url;
+      setButtonsEnabled(false);
+      showProgress();
+      setStatus("");
 
-      resultEl.style.display = "block";
-      statusEl.style.display = "none";
+      originalImg.src = URL.createObjectURL(file);
+      resultSection.classList.remove("hidden");
 
-    } catch (err) {
-      console.error(err);
-      errorEl.textContent = "Failed to connect to backend";
-      errorEl.style.display = "block";
-      statusEl.style.display = "none";
+      const formData = new FormData();
+      formData.append("image", file);
+
+      try {
+        const blob = await sendWithProgress(formData);
+
+        if (processedBlobUrl) URL.revokeObjectURL(processedBlobUrl);
+        processedBlobUrl = URL.createObjectURL(blob);
+
+        imgObj.onload = () => {
+          drawPreview();
+          setButtonsEnabled(true);
+          hideProgress();
+          setStatus("Background removed successfully.");
+        };
+        imgObj.src = processedBlobUrl;
+
+      } catch (err) {
+        console.error(err);
+        hideProgress();
+        setStatus(err.message || "Failed to connect to backend", true);
+      }
     }
-  });
-</script>
 
+    // ==================== EVENT WIRING ====================
+    chooseBtn.addEventListener("click", (e) => {
+	e.preventDefault();
+  	e.stopPropagation();   // <- prevents dropArea click handler from firing too
+  	fileInput.click();
+    });
+
+// Clicking elsewhere in the drop area (not the button) also opens dialog
+   dropArea.addEventListener("click", (e) => {
+  // If the click originated on the button, we already handled it above
+  	if (e.target === chooseBtn) return;
+  	ileInput.click();
+   });
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      handleFile(file);
+    });
+
+    // drag & drop styling
+    ["dragenter", "dragover"].forEach(ev => {
+      dropArea.addEventListener(ev, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropArea.classList.add("border-indigo-500", "bg-indigo-50/40");
+      });
+    });
+
+    ["dragleave", "drop"].forEach(ev => {
+      dropArea.addEventListener(ev, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropArea.classList.remove("border-indigo-500", "bg-indigo-50/40");
+      });
+    });
+
+    dropArea.addEventListener("drop", (e) => {
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    });
+
+    // downloads
+    dlTransparentBtn.addEventListener("click", () => {
+      if (!processedBlobUrl) return;
+      const a = document.createElement("a");
+      a.href = processedBlobUrl;
+      a.download = "removed-transparent.png";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+
+    dlColoredBtn.addEventListener("click", () => {
+      if (!coloredDownloadUrl) return;
+      const a = document.createElement("a");
+      a.href = coloredDownloadUrl;
+      a.download = "removed-colored.png";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+
+    // color selection
+    function selectColor(color) {
+      selectedColor = color;
+      colorSwatches.forEach(sw => {
+        if (sw.dataset.color === color) sw.classList.add("selected");
+        else sw.classList.remove("selected");
+      });
+      updateBgLabels();
+      drawPreview();
+    }
+
+    colorSwatches.forEach(sw => {
+      sw.addEventListener("click", () => {
+        const c = sw.dataset.color;
+        selectColor(c);
+      });
+    });
+
+    customColorInput.addEventListener("input", (e) => {
+      const c = e.target.value;
+      selectColor(c);
+    });
+
+    modeTransparentBtn.addEventListener("click", () => {
+      selectColor("transparent");
+    });
+
+    modeColorBtn.addEventListener("click", () => {
+      if (selectedColor === "transparent") {
+        selectColor("#ffffff");
+      }
+    });
+
+    // initial
+    selectColor("transparent");
+  </script>
 </body>
 </html>
 
